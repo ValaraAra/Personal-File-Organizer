@@ -6,7 +6,7 @@ from destination import Destination
 
 # Directory Setup
 DIR_BASE = os.path.expanduser('~')
-DIR_OUTPUT = f"{DIR_BASE}\Desktop\Main\Organizer Output"
+DIR_OUTPUT = f"{DIR_BASE}\Desktop\Organizer Output"
 DIR_DOWNLOADS = f"{DIR_BASE}\Downloads"
 DIR_DESKTOP = f"{DIR_BASE}\Desktop"
 
