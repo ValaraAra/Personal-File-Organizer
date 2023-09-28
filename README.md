@@ -1,10 +1,11 @@
+[![](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/) [![](https://img.shields.io/badge/code_style-black-black)](https://github.com/psf/black) [![](https://img.shields.io/github/license/ValaraAra/Personal-File-Organizer.svg)](https://github.com/ValaraAra/Personal-File-Organizer/blob/master/LICENSE.md)
+
 # Personal File Organizer
 
 This python script organizes your Downloads and Desktop folders by file type.
 
 ## Requirements
 ```
-Python 3.7+
 Watchdog
 Loguru
 ```
