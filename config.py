@@ -7,8 +7,7 @@ from destination import Destination
 # Directory Setup
 DIR_BASE = os.path.expanduser('~')
 DIR_OUTPUT = f"{DIR_BASE}\Desktop\Organizer Output"
-DIR_DOWNLOADS = f"{DIR_BASE}\Downloads"
-DIR_DESKTOP = f"{DIR_BASE}\Desktop"
+DIR_INPUTS = [f"{DIR_BASE}\Downloads", f"{DIR_BASE}\Desktop"]
 
 # Log File
 LOG_PATH = f"{os.path.join(DIR_OUTPUT, 'organizer-log.log')}"

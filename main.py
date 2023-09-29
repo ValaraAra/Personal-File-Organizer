@@ -1,6 +1,5 @@
 import os
 import shutil
-import itertools
 
 from loguru import logger
 
@@ -12,6 +11,12 @@ from config import *
 # Helper Functions
 def getColoredText(text, color):
     return f"<{color}>{text}</{color}>"
+
+def isDirectoryValid(path):
+    if os.path.exists(path) and os.path.isdir(path):
+        return True
+    
+    return False
 
 def isFileValid(path):
     if os.path.exists(path) and os.path.isfile(path):
@@ -81,17 +86,37 @@ def processFile(path, name: str):
     logger.opt(colors=True).log("IGNORED", f"Unsupported Extension: {getColoredText(name, COLOR_FILE_NAME)} ({getColoredText(path, COLOR_FILE_PATH)})\n")
 
 def sweepDirectories():
-    with os.scandir(DIR_DOWNLOADS) as downloadsEntries, os.scandir(DIR_DESKTOP) as desktopEntries:
-        logger.opt(colors=True).debug(f"<{COLOR_DEBUG}>Running Sweep</{COLOR_DEBUG}>\n")
-        
-        for entry in itertools.chain(downloadsEntries, desktopEntries):
-            processFile(entry.path, entry.name)
-        
-        logger.opt(colors=True).debug(f"<{COLOR_DEBUG}>Finished Sweep</{COLOR_DEBUG}>\n")
+    logger.opt(colors=True).debug(f"<{COLOR_DEBUG}>Running Sweep</{COLOR_DEBUG}>\n")
+    
+    for directory in DIR_INPUTS:
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                processFile(entry.path, entry.name)
+    
+    logger.opt(colors=True).debug(f"<{COLOR_DEBUG}>Finished Sweep</{COLOR_DEBUG}>\n")
 
 # Startup Log Message
-logger.opt(colors=True).info(f"<{COLOR_START}>Organizing Desktop & Downloads</{COLOR_START}>")
+logger.opt(colors=True).info(f"<{COLOR_START}>Organizing Folders</{COLOR_START}>")
 logger.opt(colors=True).info(f"Output: {getColoredText(DIR_OUTPUT, COLOR_FILE_PATH)}\n")
+
+# Ensure All Necessary Directories Are Valid
+if not isDirectoryValid(DIR_OUTPUT):
+    logger.opt(colors=True).error(f"Output Directory Invalid!\n")
+    quit()
+
+if len(DIR_INPUTS) < 1:
+    logger.opt(colors=True).error(f"No Input Directories!\n")
+    quit()
+
+for directory in DIR_INPUTS:
+    if not isDirectoryValid(directory):
+        logger.opt(colors=True).error(f"Input Directory Invalid: ({getColoredText(directory, COLOR_ERROR)})\n")
+        quit()
+
+for destination in DESTINATIONS:
+    if os.path.samefile(DIR_OUTPUT, destination.path):
+        logger.opt(colors=True).error(f"An Input Directory Cannot Match An Output Destination!\n")
+        quit()
 
 # Initial File Sweep
 sweepDirectories()
@@ -104,32 +129,37 @@ class EventHandler(FileSystemEventHandler):
 
 # Watchdog Setup
 if __name__ == "__main__":
-    # The Event Handler
+    # Setup
     eventHandler = EventHandler()
+    observers = []
     
-    # Start Watching Downloads & Desktop (ignores sub-directories)
-    downloadsObserver = Observer()
-    downloadsObserver.schedule(eventHandler, DIR_DOWNLOADS, recursive=False)
-    downloadsObserver.start()
+    def observersAlive(observers):
+        for observer in observers:
+            if not observer.is_alive():
+                return False
+        
+        return True
     
-    desktopObserver = Observer()
-    desktopObserver.schedule(eventHandler, DIR_DESKTOP, recursive=False)
-    desktopObserver.start()
+    # Start Watching (ignores sub-directories)
+    for directory in DIR_INPUTS:
+        observer = Observer()
+        observer.schedule(eventHandler, directory, recursive=False)
+        observer.start()
+        observers.append(observer)
     
     logger.opt(colors=True).debug(f"<{COLOR_DEBUG}>Started Monitoring</{COLOR_DEBUG}>\n")
     
-    # Handle Both Observers
+    # Handle Observers
     try:
-        while downloadsObserver.is_alive() and desktopObserver.is_alive():
-            downloadsObserver.join(1)
-            desktopObserver.join(1)
+        while observersAlive(observers):
+            for observer in observers:
+                observer.join(1)
     except KeyboardInterrupt as error:
         logger.opt(colors=True).info(f"<{COLOR_SHUTDOWN}>Shutting Down</{COLOR_SHUTDOWN}>\n")
     finally:
-        downloadsObserver.stop()
-        desktopObserver.stop()
-        
-        downloadsObserver.join()
-        desktopObserver.join()
+        for observer in observers:
+            observer.stop()
+        for observer in observers:
+            observer.join()
 
 quit()
