@@ -1,8 +1,6 @@
 import os
 import shutil
 
-from loguru import logger
-
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -12,78 +10,72 @@ from config import *
 def getColoredText(text, color):
     return f"<{color}>{text}</{color}>"
 
-def isDirectoryValid(path):
-    if os.path.exists(path) and os.path.isdir(path):
+def isDirectoryValid(path: Path):
+    if path.exists() and path.is_dir():
         return True
     
     return False
 
-def isFileValid(path):
-    if os.path.exists(path) and os.path.isfile(path):
+def isFileValid(path: Path):
+    if path.exists() and path.is_file():
         return True
     
     return False
 
-def isFileIgnored(name):
-    if name in IGNORED_FILES:
+def isFileIgnored(path: Path):
+    if path.name in IGNORED_FILES:
         return True
     
-    extension = os.path.splitext(name)[1].lower()
-    if extension in IGNORED_EXTENSIONS:
+    if path.suffix.lower() in IGNORED_EXTENSIONS:
         return True
     
     return False
 
-def getUniqueFileName(name, destination_path):
-    filename, extension = os.path.splitext(name)
+def getUniqueFilePath(path: Path):
+    newPath = path
     counter = 1
     
-    while os.path.exists(os.path.join(destination_path, name)):
-        name = f"{filename}({str(counter)}){extension}"
+    while newPath.exists():
+        newName = f"{path.stem}({counter}){path.suffix}"
+        newPath = Path(path.parent, newName)
         counter += 1
     
-    return name
+    return newPath
 
-def moveFile(path, name: str, destination: Destination):
+def moveFile(path: Path, destination: Destination):
     if not isFileValid(path):
-        logger.opt(colors=True).warning(f"File Invalid: {getColoredText(name, COLOR_FILE_NAME)} ({getColoredText(path, COLOR_FILE_PATH)})\n")
+        logger.opt(colors=True).warning(f"File Invalid: {getColoredText(path.name, COLOR_FILE_NAME)} ({getColoredText(path, COLOR_FILE_PATH)})\n")
         return
     
-    destinationPath = destination.path
-    finalPath = os.path.join(destinationPath, name)
-    
-    if os.path.exists(finalPath):
-        finalPath = os.path.join(destinationPath, getUniqueFileName(name, destinationPath))
-    
     destination.checkDir()
+    
+    finalPath = getUniqueFilePath(Path(destination.path, path.name))
     
     try:
         shutil.move(path, finalPath)
     except OSError as error:
-        fileStat = os.stat(path)
+        fileStat = path.stat()
         if type(error) is PermissionError and fileStat.st_atime == fileStat.st_mtime:
-            logger.opt(colors=True).log("IGNORED", f"File Being Created: {getColoredText(name, COLOR_FILE_NAME)} ({getColoredText(path, COLOR_FILE_PATH)})\n")
+            logger.opt(colors=True).log("IGNORED", f"File Being Created: {getColoredText(path.name, COLOR_FILE_NAME)} ({getColoredText(path, COLOR_FILE_PATH)})\n")
             return
         else:
-            logger.opt(colors=True).error(f"Moving {destination.name} File: {getColoredText(name, COLOR_FILE_NAME)} ({getColoredText(path, COLOR_FILE_PATH)})")
+            logger.opt(colors=True).error(f"Moving {destination.name} File: {getColoredText(path.name, COLOR_FILE_NAME)} ({getColoredText(path, COLOR_FILE_PATH)})")
             logger.opt(colors=True).error(f"({getColoredText(error, COLOR_ERROR)})\n")
             return
     
-    logger.opt(colors=True).success(f"Moved {destination.name} File: {getColoredText(name, COLOR_FILE_NAME)}")
+    logger.opt(colors=True).success(f"Moved {destination.name} File: {getColoredText(path.name, COLOR_FILE_NAME)}")
     logger.opt(colors=True).success(f"({getColoredText(path, COLOR_FILE_PATH)}) -> ({getColoredText(finalPath, COLOR_FILE_PATH)})\n")
 
-def processFile(path, name: str):
-    if not isFileValid(path) or isFileIgnored(name):
+def processFile(path: Path):
+    if not isFileValid(path) or isFileIgnored(path):
         return
     
-    extension = os.path.splitext(name)[1].lower()
-    
     for destination in DESTINATIONS:
-        if extension in destination.extensions:
-            moveFile(path, name, destination)
+        if path.suffix.lower() in destination.extensions:
+            moveFile(path, destination)
             return
     
-    logger.opt(colors=True).log("IGNORED", f"Unsupported Extension: {getColoredText(name, COLOR_FILE_NAME)} ({getColoredText(path, COLOR_FILE_PATH)})\n")
+    logger.opt(colors=True).log("IGNORED", f"Unsupported Extension: {getColoredText(path.name, COLOR_FILE_NAME)} ({getColoredText(path, COLOR_FILE_PATH)})\n")
 
 def sweepDirectories():
     logger.opt(colors=True).debug(f"<{COLOR_DEBUG}>Running Sweep</{COLOR_DEBUG}>\n")
@@ -91,7 +83,7 @@ def sweepDirectories():
     for directory in DIR_INPUTS:
         with os.scandir(directory) as entries:
             for entry in entries:
-                processFile(entry.path, entry.name)
+                processFile(Path(entry.path))
     
     logger.opt(colors=True).debug(f"<{COLOR_DEBUG}>Finished Sweep</{COLOR_DEBUG}>\n")
 
@@ -114,7 +106,7 @@ for directory in DIR_INPUTS:
         quit()
 
 for destination in DESTINATIONS:
-    if os.path.samefile(DIR_OUTPUT, destination.path):
+    if DIR_OUTPUT.samefile(destination.path):
         logger.opt(colors=True).error(f"An Input Directory Cannot Match An Output Destination!\n")
         quit()
 
@@ -124,8 +116,7 @@ sweepDirectories()
 # Watchdog Event Handler
 class EventHandler(FileSystemEventHandler):
     def on_modified(self, event):
-        path = event.src_path
-        processFile(path, os.path.basename(path))
+        processFile(Path(event.src_path))
 
 # Watchdog Setup
 if __name__ == "__main__":

@@ -1,16 +1,17 @@
-import os
 import sys
 
-from loguru import logger
+from pathlib import Path
 from destination import Destination
 
+from loguru import logger
+
 # Directory Setup
-DIR_BASE = os.path.expanduser('~')
-DIR_OUTPUT = f"{DIR_BASE}\Desktop\Organizer Output"
-DIR_INPUTS = [f"{DIR_BASE}\Downloads", f"{DIR_BASE}\Desktop"]
+DIR_BASE = Path.home()
+DIR_OUTPUT = Path(DIR_BASE, 'Desktop', 'Organizer Output')
+DIR_INPUTS = [Path(DIR_BASE, 'Downloads'), Path(DIR_BASE, 'Desktop')]
 
 # Log File
-LOG_PATH = f"{os.path.join(DIR_OUTPUT, 'organizer-log.log')}"
+LOG_PATH = Path(DIR_OUTPUT, 'organizer-log.log')
 
 # Supported File Extensions
 EXTENSIONS_IMAGE = [".jpg", ".jpeg", ".jpe", ".jif", ".jfif", ".jfi", ".pjpeg", ".pjg",
@@ -47,12 +48,12 @@ logger.add(LOG_PATH, delay=True, rotation="10 MB", retention="30 days", format="
 
 # Destinations
 DESTINATION_OUTPUT = Destination("Output", DIR_OUTPUT, None) # This is really only used to log the creation of the base Output folder
-DESTINATION_IMAGE = Destination("Image", f"{DIR_OUTPUT}\Images", EXTENSIONS_IMAGE)
-DESTINATION_AUDIO = Destination("Audio", f"{DIR_OUTPUT}\Audio", EXTENSIONS_AUDIO)
-DESTINATION_VIDEO = Destination("Video", f"{DIR_OUTPUT}\Video", EXTENSIONS_VIDEO)
-DESTINATION_DOCUMENT = Destination("Document", f"{DIR_OUTPUT}\Documents", EXTENSIONS_DOCUMENT)
-DESTINATION_ARCHIVE = Destination("Archive", f"{DIR_OUTPUT}\Archives", EXTENSIONS_ARCHIVE)
-DESTINATION_OTHER = Destination("Other", f"{DIR_OUTPUT}\Other", EXTENSIONS_OTHER)
+DESTINATION_IMAGE = Destination("Image", Path(DIR_OUTPUT, 'Images'), EXTENSIONS_IMAGE)
+DESTINATION_AUDIO = Destination("Audio", Path(DIR_OUTPUT, 'Audio'), EXTENSIONS_AUDIO)
+DESTINATION_VIDEO = Destination("Video", Path(DIR_OUTPUT, 'Video'), EXTENSIONS_VIDEO)
+DESTINATION_DOCUMENT = Destination("Document", Path(DIR_OUTPUT, 'Documents'), EXTENSIONS_DOCUMENT)
+DESTINATION_ARCHIVE = Destination("Archive", Path(DIR_OUTPUT, 'Archives'), EXTENSIONS_ARCHIVE)
+DESTINATION_OTHER = Destination("Other", Path(DIR_OUTPUT, 'Other'), EXTENSIONS_OTHER)
 
 DESTINATIONS = [DESTINATION_IMAGE, DESTINATION_AUDIO, DESTINATION_VIDEO,
     DESTINATION_DOCUMENT, DESTINATION_ARCHIVE, DESTINATION_OTHER]
