@@ -8,7 +8,6 @@ class Destination():
         self.name = name
         self.path = path
         self.extensions = extensions
-        self.checkDir()
 
     # Check to make sure the destination directory exists.
     def checkDir(self):

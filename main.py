@@ -87,49 +87,61 @@ def sweepDirectories():
     
     logger.opt(colors=True).debug(f"<{COLOR_DEBUG}>Finished Sweep</{COLOR_DEBUG}>\n")
 
-# Startup Log Message
-logger.opt(colors=True).info(f"<{COLOR_START}>Organizing Folders</{COLOR_START}>")
-logger.opt(colors=True).info(f"Output: {getColoredText(DIR_OUTPUT, COLOR_FILE_PATH)}\n")
+def checkDestinations():
+    DESTINATION_OUTPUT.checkDir()
+    
+    for destination in DESTINATIONS:
+        destination.checkDir()
 
-# Ensure All Necessary Directories Are Valid
-if not isDirectoryValid(DIR_OUTPUT):
-    logger.opt(colors=True).error(f"Output Directory Invalid!\n")
-    quit()
-
-if len(DIR_INPUTS) < 1:
-    logger.opt(colors=True).error(f"No Input Directories!\n")
-    quit()
-
-for directory in DIR_INPUTS:
-    if not isDirectoryValid(directory):
-        logger.opt(colors=True).error(f"Input Directory Invalid: ({getColoredText(directory, COLOR_ERROR)})\n")
+# Ensure All Necessary Config Settings Are Valid
+def ensureConfigValidity():
+    if not isDirectoryValid(DIR_OUTPUT):
+        logger.opt(colors=True).error(f"Output Directory Invalid!\n")
         quit()
 
-for destination in DESTINATIONS:
-    if DIR_OUTPUT.samefile(destination.path):
-        logger.opt(colors=True).error(f"An Input Directory Cannot Match An Output Destination!\n")
+    if len(DIR_INPUTS) < 1:
+        logger.opt(colors=True).error(f"No Input Directories!\n")
         quit()
 
-# Initial File Sweep
-sweepDirectories()
+    for directory in DIR_INPUTS:
+        if not isDirectoryValid(directory):
+            logger.opt(colors=True).error(f"Input Directory Invalid: ({getColoredText(directory, COLOR_ERROR)})\n")
+            quit()
+
+    for destination in DESTINATIONS:
+        if DIR_OUTPUT.samefile(destination.path):
+            logger.opt(colors=True).error(f"An Input Directory Cannot Match An Output Destination!\n")
+            quit()
+
+# Watchdog Observers Status Check
+def observersAlive(observers):
+    for observer in observers:
+        if not observer.is_alive():
+            return False
+    
+    return True
 
 # Watchdog Event Handler
 class EventHandler(FileSystemEventHandler):
     def on_modified(self, event):
         processFile(Path(event.src_path))
 
-# Watchdog Setup
 if __name__ == "__main__":
     # Setup
+    print()
+    checkDestinations()
+    ensureConfigValidity()
+    
+    # Log Startup Message
+    logger.opt(colors=True).info(f"<{COLOR_START}>Organizing Folders</{COLOR_START}>")
+    logger.opt(colors=True).info(f"Output: {getColoredText(DIR_OUTPUT, COLOR_FILE_PATH)}\n")
+    
+    # Initial File Sweep
+    sweepDirectories()
+    
+    # Watchdog Setup
     eventHandler = EventHandler()
     observers = []
-    
-    def observersAlive(observers):
-        for observer in observers:
-            if not observer.is_alive():
-                return False
-        
-        return True
     
     # Start Watching (ignores sub-directories)
     for directory in DIR_INPUTS:
@@ -140,7 +152,7 @@ if __name__ == "__main__":
     
     logger.opt(colors=True).debug(f"<{COLOR_DEBUG}>Started Monitoring</{COLOR_DEBUG}>\n")
     
-    # Handle Observers
+    # Handle Watchdog Observers
     try:
         while observersAlive(observers):
             for observer in observers:
@@ -152,5 +164,5 @@ if __name__ == "__main__":
             observer.stop()
         for observer in observers:
             observer.join()
-
-quit()
+    
+    quit()
