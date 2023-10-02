@@ -1,17 +1,39 @@
 import sys
+import argparse
 
 from pathlib import Path
 from destination import Destination
 
 from loguru import logger
 
-# Directory Setup
-DIR_BASE = Path.home()
-DIR_OUTPUT = Path(DIR_BASE, 'Desktop', 'Organizer Output')
-DIR_INPUTS = [Path(DIR_BASE, 'Downloads'), Path(DIR_BASE, 'Desktop')]
+# Directory Defaults
+_DIR_BASE = Path.home()
+_DIR_OUTPUT = Path(_DIR_BASE, 'Desktop', 'Organizer Output')
+_DIR_DOWNLOADS = Path(_DIR_BASE, 'Downloads')
+_DIR_DESKTOP = Path(_DIR_BASE, 'Desktop')
 
-# Log File
-LOG_LEVEL = "INFO"
+# Argument Path Validator
+def validatedString(x: str):
+    string = x.strip()
+    
+    if string == "":
+        argparse.ArgumentError()
+    else:
+        return string
+
+# Argument Parser
+parser = argparse.ArgumentParser()
+parser.add_argument("-o", "--output", type=validatedString, default=_DIR_OUTPUT, help="set the output path")
+parser.add_argument("-i", "--input", type=validatedString, action="extend", nargs="+", help="set the input path(s)")
+parser.add_argument("-l", "--level", default="INFO", choices=["DEBUG", "INFO", "WARNING"], help="set the log level")
+args = parser.parse_args()
+
+# Directory Settings
+DIR_OUTPUT = Path(args.output)
+DIR_INPUTS = list(map(Path, args.input)) if args.input else [_DIR_DOWNLOADS, _DIR_DESKTOP]
+
+# Log Settings
+LOG_LEVEL = args.level
 LOG_PATH = Path(DIR_OUTPUT, 'organizer-log.log')
 
 # Supported File Extensions
