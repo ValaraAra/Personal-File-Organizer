@@ -13,4 +13,4 @@ class Destination():
     def checkDir(self):
         if not self.path.exists():
             os.makedirs(self.path, exist_ok=True)
-            logger.log("SETUP", f"Created {self.path.parent.stem} Directory!\n")
+            logger.log("SETUP", f"Created {self.path.stem} Directory\n")

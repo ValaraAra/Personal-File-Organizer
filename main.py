@@ -95,23 +95,32 @@ def checkDestinations():
 
 # Ensure All Necessary Config Settings Are Valid
 def ensureConfigValidity():
+    shouldQuit = False
+    
     if not isDirectoryValid(DIR_OUTPUT):
         logger.opt(colors=True).error(f"Output Directory Invalid!\n")
-        quit()
-
+        shouldQuit = True
+    
     if len(DIR_INPUTS) < 1:
         logger.opt(colors=True).error(f"No Input Directories!\n")
-        quit()
-
+        shouldQuit = True
+    
     for directory in DIR_INPUTS:
         if not isDirectoryValid(directory):
             logger.opt(colors=True).error(f"Input Directory Invalid: ({getColoredText(directory, COLOR_ERROR)})\n")
-            quit()
-
-    for destination in DESTINATIONS:
-        if DIR_OUTPUT.samefile(destination.path):
-            logger.opt(colors=True).error(f"An Input Directory Cannot Match An Output Destination!\n")
-            quit()
+            shouldQuit = True
+    
+    if shouldQuit:
+        quit()
+    
+    for input in DIR_INPUTS:
+        for destination in DESTINATIONS:
+            if input.samefile(destination.path):
+                logger.opt(colors=True).error(f"An Input Directory Cannot Match An Output Destination!\n")
+                shouldQuit = True
+    
+    if shouldQuit:
+        quit()
 
 # Watchdog Observers Status Check
 def observersAlive(observers):

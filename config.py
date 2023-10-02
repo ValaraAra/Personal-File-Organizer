@@ -11,6 +11,7 @@ DIR_OUTPUT = Path(DIR_BASE, 'Desktop', 'Organizer Output')
 DIR_INPUTS = [Path(DIR_BASE, 'Downloads'), Path(DIR_BASE, 'Desktop')]
 
 # Log File
+LOG_LEVEL = "INFO"
 LOG_PATH = Path(DIR_OUTPUT, 'organizer-log.log')
 
 # Supported File Extensions
@@ -43,7 +44,7 @@ COLOR_FILE_PATH = "light-black"
 logger.remove()
 logger.level("SETUP", no=10, color="<light-yellow>")
 logger.level("IGNORED", no=15, color="<light-yellow>")
-logger.add(sys.stdout, level="INFO", format="[<light-magenta>{time:ddd hh:mm:ss A}</light-magenta>] <level>{level}</level> - {message}")
+logger.add(sys.stdout, level=LOG_LEVEL, format="[<light-magenta>{time:ddd hh:mm:ss A}</light-magenta>] <level>{level}</level> - {message}")
 logger.add(LOG_PATH, delay=True, rotation="10 MB", retention="30 days", format="[{time:YYYY-MM-DD HH:mm:ss.SSS}] {level} - {message}")
 
 # Destinations
