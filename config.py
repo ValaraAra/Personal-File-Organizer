@@ -46,7 +46,7 @@ EXTENSIONS_AUDIO = [".m4a", ".flac", "mp3", ".wav", ".wma", ".aac",]
 EXTENSIONS_VIDEO = [".webm", ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg",
     ".mp4", ".mp4v", ".m4v", ".avi", ".wmv", ".mov", ".qt", ".flv", ".swf", ".avchd",]
 EXTENSIONS_DOCUMENT = [".doc", ".docx", ".odt", ".pdf", ".xls", ".xlsx", ".txt",
-    ".html", ".htm", ".ppt", ".pptx", ".odp", ".key", ".cfg", ".ini", ".ttf",]
+    ".html", ".htm", ".ppt", ".pptx", ".odp", ".key", ".cfg", ".ini", ".ttf", ".csv",]
 EXTENSIONS_ARCHIVE = [".rar", ".zip", ".7z", ".tar", ".iso", ".pea",]
 EXTENSIONS_OTHER = [".exe", ".jar", ".apk",]
 
