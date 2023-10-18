@@ -148,30 +148,34 @@ if __name__ == "__main__":
     # Initial File Sweep
     sweepDirectories()
     
-    # Watchdog Setup
-    eventHandler = EventHandler()
-    observers = []
-    
-    # Start Watching (ignores sub-directories)
-    for directory in DIR_INPUTS:
-        observer = Observer()
-        observer.schedule(eventHandler, directory, recursive=False)
-        observer.start()
-        observers.append(observer)
-    
-    logger.opt(colors=True).debug(f"<{COLOR_DEBUG}>Started Monitoring</{COLOR_DEBUG}>\n")
-    
-    # Handle Watchdog Observers
-    try:
-        while observersAlive(observers):
+    # Start Monitoring (if enabled)
+    if (MONITOR_FILES):
+        # Setup Watchdog
+        eventHandler = EventHandler()
+        observers = []
+        
+        # Start Watching (ignores sub-directories)
+        for directory in DIR_INPUTS:
+            observer = Observer()
+            observer.schedule(eventHandler, directory, recursive=False)
+            observer.start()
+            observers.append(observer)
+        
+        logger.opt(colors=True).debug(f"<{COLOR_DEBUG}>Started Monitoring</{COLOR_DEBUG}>\n")
+        
+        # Handle Watchdog Observers
+        try:
+            while observersAlive(observers):
+                for observer in observers:
+                    observer.join(1)
+        except KeyboardInterrupt as error:
+            logger.opt(colors=True).info(f"<{COLOR_SHUTDOWN}>Shutting Down</{COLOR_SHUTDOWN}>\n")
+        finally:
             for observer in observers:
-                observer.join(1)
-    except KeyboardInterrupt as error:
+                observer.stop()
+            for observer in observers:
+                observer.join()
+    else:
         logger.opt(colors=True).info(f"<{COLOR_SHUTDOWN}>Shutting Down</{COLOR_SHUTDOWN}>\n")
-    finally:
-        for observer in observers:
-            observer.stop()
-        for observer in observers:
-            observer.join()
     
     quit()

@@ -17,7 +17,7 @@ def validatedString(x: str):
     string = x.strip()
     
     if string == "":
-        argparse.ArgumentError()
+        raise argparse.ArgumentTypeError('expected non-empty string')
     else:
         return string
 
@@ -26,7 +26,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-o", "--output", type=validatedString, default=_DIR_OUTPUT, help="set the output path")
 parser.add_argument("-i", "--input", type=validatedString, action="extend", nargs="+", help="set the input path(s)")
 parser.add_argument("-l", "--level", default="INFO", choices=["DEBUG", "INFO", "WARNING"], help="set the log level")
+parser.add_argument("-m", "--monitor", action='store_true', help="enable file monitoring (actively checks for new files to organize)")
 args = parser.parse_args()
+
+# Monitor Setting
+MONITOR_FILES = args.monitor
 
 # Directory Settings
 DIR_OUTPUT = Path(args.output)
